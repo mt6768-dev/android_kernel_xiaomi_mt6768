@@ -27,11 +27,12 @@
 #include <vibrator_hal.h>
 #include <mt-plat/upmu_common.h>
 
-#define MAX_VIBR 9
 #define MIN_VIBR 0
 
 #define ENGINE_VERSION  1
 #define ENGINE_VERSION_SUB 0
+
+int max_vibr;
 
 extern unsigned short pmic_set_register_value(PMU_FLAGS_LIST_ENUM flagname, uint32_t val);
 
@@ -47,7 +48,7 @@ static ssize_t vibr_vtg_store(struct kobject *kobj, struct kobj_attribute *attr,
 	unsigned int val;
 	struct vibrator_hw* hw = mt_get_cust_vibrator_hw();
 	sscanf(buf, "%u", &val);
-	if(val>=MIN_VIBR && val <=MAX_VIBR) {
+	if(val>=MIN_VIBR && val <=max_vibr) {
 		pmic_set_register_value(PMIC_RG_VIBR_VOSEL, val);
 		hw->vib_vol=val;
 	}
@@ -67,7 +68,7 @@ static ssize_t min_show(struct kobject *kobj, struct kobj_attribute *attr, char 
 
 static ssize_t max_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
 {
-	return sprintf(buf, "%d\n", MAX_VIBR);
+	return sprintf(buf, "%d\n", max_vibr);
 }
 
 static struct kobj_attribute thunderquake_version_attribute =
@@ -111,7 +112,16 @@ static struct kobject *vibr_level_control_kobj;
 static int vibr_level_control_init(void)
 {
 	int sysfs_result;
+        struct vibrator_hw* hw;
 	printk(KERN_DEBUG "[%s]\n",__func__);
+
+	hw = mt_get_cust_vibrator_hw();
+        if (hw)
+	    max_vibr = hw->vib_vol;
+        else
+            max_vibr = 9;
+
+        pr_info("[%s] max_vibr: %d\n", __func__, max_vibr);
 
 	vibr_level_control_kobj =
 		kobject_create_and_add("thunderquake_engine", kernel_kobj);
