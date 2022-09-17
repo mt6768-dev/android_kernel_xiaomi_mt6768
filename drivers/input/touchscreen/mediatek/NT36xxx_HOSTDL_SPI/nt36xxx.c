@@ -44,9 +44,6 @@
 #include <linux/jiffies.h>
 #endif /* #if NVT_TOUCH_ESD_PROTECT */
 
-#ifdef CONFIG_TOUCHSCREEN_XIAOMI_TOUCHFEATURE
-#include "../xiaomi/xiaomi_touch.h"
-#endif
 
 
 #if NVT_TOUCH_ESD_PROTECT
@@ -1576,172 +1573,6 @@ int nvt_gesture_switch(struct input_dev *dev, unsigned int type, unsigned int co
 
 #endif
 
-#ifdef CONFIG_TOUCHSCREEN_XIAOMI_TOUCHFEATURE
-static struct xiaomi_touch_interface xiaomi_touch_interfaces;
-
-extern int32_t nvt_set_pf_switch(uint8_t pf_switch);
-
-extern int32_t nvt_set_sensitivity_switch(uint8_t sensitivity_switch);
-
-extern int32_t nvt_set_er_range_switch(uint8_t er_range_switch);
-
-extern int32_t nvt_get_pf_switch(uint8_t *pf_switch);
-
-extern int32_t nvt_get_sensitivity_switch(uint8_t *sensitivity_switch);
-
-extern int32_t nvt_get_er_range_switch(uint8_t *er_range_switch);
-
-static int nvt_set_cur_value(int mode, int value)
-{
-	if (mode < Touch_Mode_NUM && mode >= 0) {
-		xiaomi_touch_interfaces.touch_mode[mode][SET_CUR_VALUE] = value;
-		if (xiaomi_touch_interfaces.touch_mode[mode][SET_CUR_VALUE] > xiaomi_touch_interfaces.touch_mode[mode][GET_MAX_VALUE])
-			xiaomi_touch_interfaces.touch_mode[mode][SET_CUR_VALUE] = xiaomi_touch_interfaces.touch_mode[mode][GET_MAX_VALUE];
-		else if (xiaomi_touch_interfaces.touch_mode[mode][SET_CUR_VALUE] < xiaomi_touch_interfaces.touch_mode[mode][GET_MIN_VALUE])
-			xiaomi_touch_interfaces.touch_mode[mode][SET_CUR_VALUE] = xiaomi_touch_interfaces.touch_mode[mode][GET_MIN_VALUE];
-
-		xiaomi_touch_interfaces.touch_mode[mode][GET_CUR_VALUE] = xiaomi_touch_interfaces.touch_mode[mode][SET_CUR_VALUE];
-
-		if (mode == 0) {
-			if (value == 0) {
-				nvt_set_sensitivity_switch(3);
-				nvt_set_pf_switch(0);
-				nvt_set_er_range_switch(2);
-			} else {
-				nvt_set_sensitivity_switch(xiaomi_touch_interfaces.touch_mode[mode][SET_CUR_VALUE]);
-				nvt_set_pf_switch(xiaomi_touch_interfaces.touch_mode[mode][SET_CUR_VALUE]);
-				nvt_set_er_range_switch(xiaomi_touch_interfaces.touch_mode[mode][SET_CUR_VALUE]);
-			}
-		}
-
-		if (mode == 2) {
-			nvt_set_sensitivity_switch(xiaomi_touch_interfaces.touch_mode[mode][SET_CUR_VALUE]);
-		} else if (mode == 3) {
-			nvt_set_pf_switch(xiaomi_touch_interfaces.touch_mode[mode][SET_CUR_VALUE]);
-		} else if (mode == 7) {
-			nvt_set_er_range_switch(xiaomi_touch_interfaces.touch_mode[mode][SET_CUR_VALUE]);
-		} else
-			NVT_LOG("%s,don't support\n", __func__);
-	} else
-		NVT_LOG("%s,don't support\n", __func__);
-
-	return 0;
-}
-
-static int nvt_get_mode_cur_value(int mode)
-{
-	int ret = 0;
-	uint8_t pf_switch = xiaomi_touch_interfaces.touch_mode[mode][GET_DEF_VALUE];
-
-	if (mode < Touch_Mode_NUM && mode >= 0) {
-		printk("%s ,mode = %d\n", __func__, mode);
-		if (mode == 2) {
-			pf_switch = xiaomi_touch_interfaces.touch_mode[mode][SET_CUR_VALUE];
-			ret = nvt_get_sensitivity_switch(&pf_switch);
-		} else if (mode == 3) {
-			pf_switch = xiaomi_touch_interfaces.touch_mode[mode][SET_CUR_VALUE];
-			ret = nvt_get_pf_switch(&pf_switch);
-		} else if (mode == 7) {
-			pf_switch = xiaomi_touch_interfaces.touch_mode[mode][SET_CUR_VALUE];
-			ret = nvt_get_er_range_switch(&pf_switch);
-		} else {
-			pf_switch = 0;
-			NVT_LOG("%s,don't support\n", __func__);
-			}
-	} else {
-		NVT_LOG("%s, mode %d don't support\n", __func__, mode);
-	}
-	NVT_LOG("%s mode:%d pf_switch:%d\n", mode, pf_switch);
-	return pf_switch;
-}
-
-static void nvt_init_touchmode_data(void)
-{
-	int i;
-	/* default value should equl the first initial value */
-	for (i = 0; i < Touch_Mode_NUM; i++) {
-		xiaomi_touch_interfaces.touch_mode[i][GET_DEF_VALUE] = xiaomi_touch_interfaces.touch_mode[i][GET_CUR_VALUE];
-		xiaomi_touch_interfaces.touch_mode[i][SET_CUR_VALUE] = xiaomi_touch_interfaces.touch_mode[i][GET_CUR_VALUE];
-	}
-	/* Touch Game Mode Switch */
-	xiaomi_touch_interfaces.touch_mode[Touch_Game_Mode][GET_MAX_VALUE] = 1;
-	xiaomi_touch_interfaces.touch_mode[Touch_Game_Mode][GET_MIN_VALUE] = 0;
-	xiaomi_touch_interfaces.touch_mode[Touch_Game_Mode][GET_DEF_VALUE] = 1;
-
-	/*Active Mode*/
-	xiaomi_touch_interfaces.touch_mode[Touch_Active_MODE][GET_MAX_VALUE] = 1;
-	xiaomi_touch_interfaces.touch_mode[Touch_Active_MODE][GET_MIN_VALUE] = 0;
-	xiaomi_touch_interfaces.touch_mode[Touch_Active_MODE][GET_DEF_VALUE] = 1;
-
-	/*Touch_Sensitivity mode*/
-	xiaomi_touch_interfaces.touch_mode[Touch_UP_THRESHOLD][GET_MAX_VALUE] = 2;
-	xiaomi_touch_interfaces.touch_mode[Touch_UP_THRESHOLD][GET_MIN_VALUE] = 0;
-	xiaomi_touch_interfaces.touch_mode[Touch_UP_THRESHOLD][GET_DEF_VALUE] = 0;
-	xiaomi_touch_interfaces.touch_mode[Touch_UP_THRESHOLD][SET_CUR_VALUE] = 0;
-	xiaomi_touch_interfaces.touch_mode[Touch_UP_THRESHOLD][GET_CUR_VALUE] = 0;
-
-	/* PF Mode */
-	xiaomi_touch_interfaces.touch_mode[Touch_Tolerance][GET_MAX_VALUE] = 2;
-	xiaomi_touch_interfaces.touch_mode[Touch_Tolerance][GET_MIN_VALUE] = 0;
-	xiaomi_touch_interfaces.touch_mode[Touch_Tolerance][GET_DEF_VALUE] = 0;
-	 xiaomi_touch_interfaces.touch_mode[Touch_Tolerance][SET_CUR_VALUE] = 0;
-	xiaomi_touch_interfaces.touch_mode[Touch_Tolerance][GET_CUR_VALUE] = 0;
-
-	/*Touch_ER_Range mode*/
-	xiaomi_touch_interfaces.touch_mode[Touch_Edge_Filter][GET_MAX_VALUE] = 3;
-	xiaomi_touch_interfaces.touch_mode[Touch_Edge_Filter][GET_MIN_VALUE] = 0;
-	xiaomi_touch_interfaces.touch_mode[Touch_Edge_Filter][GET_DEF_VALUE] = 2;
-	xiaomi_touch_interfaces.touch_mode[Touch_Edge_Filter][SET_CUR_VALUE] = 2;
-	xiaomi_touch_interfaces.touch_mode[Touch_Edge_Filter][GET_CUR_VALUE] = 2;
-
-}
-
-static int nvt_get_mode_value(int mode, int value_type)
-{
-	int value = -1;
-
-	if (mode < Touch_Mode_NUM && mode >= 0)
-		value = xiaomi_touch_interfaces.touch_mode[mode][value_type];
-	else
-		NVT_LOG("%s ,don't support\n", __func__);
-	return value;
-}
-
-static int nvt_get_mode_all(int mode, int *value)
-{
-	if (mode < Touch_Mode_NUM && mode >= 0) {
-		value[0] = xiaomi_touch_interfaces.touch_mode[mode][GET_CUR_VALUE];
-		value[1] = xiaomi_touch_interfaces.touch_mode[mode][GET_DEF_VALUE];
-		value[2] = xiaomi_touch_interfaces.touch_mode[mode][GET_MIN_VALUE];
-		value[3] = xiaomi_touch_interfaces.touch_mode[mode][GET_MAX_VALUE];
-	} else{
-		NVT_LOG("%s,don't support\n", __func__);
-	}
-	NVT_LOG("%s,mode:%d, value:%d:%d:%d:%d\n", __func__, mode, value[0],
-					value[1], value[2], value[3]);
-	return 0;
-}
-
-static int nvt_reset_Mode(int mode)
-{
-	 if (mode < Touch_Mode_NUM && mode >= 0) {
-		if (mode == 0)
-			nvt_set_cur_value(0, 0);
-			else if (mode == 2)
-				nvt_set_sensitivity_switch(3);
-			else if (mode == 3)
-				nvt_set_pf_switch(0);
-			else if (mode == 7)
-				nvt_set_er_range_switch(2);
-			else
-				NVT_LOG("%s,unknow value\n", __func__);
-	} else
-	NVT_LOG("%s,don't support\n", __func__);
-	return 0;
-}
-
-#endif
-
 /*******************************************************
 Description:
 	Novatek touchscreen driver probe function.
@@ -1776,17 +1607,6 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 		}
 		return -ENOMEM;
 	}
-
-#ifdef CONFIG_TOUCHSCREEN_XIAOMI_TOUCHFEATURE
-	memset(&xiaomi_touch_interfaces, 0x00, sizeof(struct xiaomi_touch_interface));
-	 xiaomi_touch_interfaces.setModeValue = nvt_set_cur_value;
-	 xiaomi_touch_interfaces.getModeValue = nvt_get_mode_value;
-	 xiaomi_touch_interfaces.getModeAll = nvt_get_mode_all;
-	xiaomi_touch_interfaces.resetMode = nvt_reset_Mode;
-	xiaomi_touch_interfaces.getModeCurValue = nvt_get_mode_cur_value;
-    xiaomitouch_register_modedata(&xiaomi_touch_interfaces);
-	nvt_init_touchmode_data();
-#endif
 
 #ifdef CONFIG_PM
 	ts->dev_pm_suspend = false;
