@@ -1476,45 +1476,30 @@ static int mtk_hdmi_dt_parse_pdata(struct mtk_hdmi *hdmi,
 		dev_err(dev,
 			"Failed to get system configuration registers: %d\n",
 			ret);
-		return ret;
+		goto put_device;
 	}
 	hdmi->sys_regmap = regmap;
 
 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	hdmi->regs = devm_ioremap_resource(dev, mem);
-	if (IS_ERR(hdmi->regs))
-		return PTR_ERR(hdmi->regs);
-
-	port = of_graph_get_port_by_id(np, 1);
-	if (!port) {
-		dev_err(dev, "Missing output port node\n");
-		return -EINVAL;
+	if (IS_ERR(hdmi->regs)) {
+		ret = PTR_ERR(hdmi->regs);
+		goto put_device;
 	}
 
-	ep = of_get_child_by_name(port, "endpoint");
-	if (!ep) {
-		dev_err(dev, "Missing endpoint node in port %s\n",
-			port->full_name);
-		of_node_put(port);
-		return -EINVAL;
-	}
-	of_node_put(port);
-
-	remote = of_graph_get_remote_port_parent(ep);
+	remote = of_graph_get_remote_node(np, 1, 0);
 	if (!remote) {
-		dev_err(dev, "Missing connector/bridge node for endpoint %s\n",
-			ep->full_name);
-		of_node_put(ep);
-		return -EINVAL;
+		ret = -EINVAL;
+		goto put_device;
 	}
-	of_node_put(ep);
 
 	if (!of_device_is_compatible(remote, "hdmi-connector")) {
 		hdmi->bridge.next = of_drm_find_bridge(remote);
 		if (!hdmi->bridge.next) {
 			dev_err(dev, "Waiting for external bridge\n");
 			of_node_put(remote);
-			return -EPROBE_DEFER;
+			ret = -EPROBE_DEFER;
+			goto put_device;
 		}
 	}
 
@@ -1523,17 +1508,22 @@ static int mtk_hdmi_dt_parse_pdata(struct mtk_hdmi *hdmi,
 		dev_err(dev, "Failed to find ddc-i2c-bus node in %s\n",
 			remote->full_name);
 		of_node_put(remote);
-		return -EINVAL;
+		ret = -EINVAL;
+		goto put_device;
 	}
 	of_node_put(remote);
 
 	hdmi->ddc_adpt = of_find_i2c_adapter_by_node(i2c_np);
 	if (!hdmi->ddc_adpt) {
 		dev_err(dev, "Failed to get ddc i2c adapter by node\n");
-		return -EINVAL;
+		ret = -EINVAL;
+		goto put_device;
 	}
 
 	return 0;
+put_device:
+	put_device(hdmi->cec_dev);
+	return ret;
 }
 
 /*
