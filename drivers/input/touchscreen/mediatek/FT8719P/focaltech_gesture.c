@@ -111,7 +111,7 @@ static struct fts_gesture_st fts_gesture_data;
 static ssize_t double_tap_show(struct kobject *kobj,
                                struct kobj_attribute *attr, char *buf)
 {
-	return sprintf(buf, "%d\n", fts_gesture_data.mode);
+	return sprintf(buf, "%d\n", fts_gesture_flag);
 }
 
 static ssize_t double_tap_store(struct kobject *kobj,
