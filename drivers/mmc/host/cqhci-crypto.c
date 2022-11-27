@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright 2020 Google LLC
+ * Copyright (C) 2021 XiaoMi, Inc.
  */
 
 #include <linux/blk-crypto.h>
@@ -77,11 +78,14 @@ static int cqhci_crypto_keyslot_program(struct keyslot_manager *ksm,
 
 	if (WARN_ON(cap_idx < 0))
 		return -EOPNOTSUPP;
-#ifndef CONFIG_MMC_CRYPTO_LEGACY
+
 	cfg.data_unit_size = data_unit_mask;
-#else
-	cfg.data_unit_size = 1;
+#ifdef CONFIG_MMC_CRYPTO_LEGACY
+	/* used fsrypt v2 in OTA fscrypt v1 environment */
+	if (key->hie_duint_size != 4096)
+		cfg.data_unit_size = 1;
 #endif
+
 	cfg.crypto_cap_idx = cap_idx;
 	cfg.config_enable = CQHCI_CRYPTO_CONFIGURATION_ENABLE;
 
