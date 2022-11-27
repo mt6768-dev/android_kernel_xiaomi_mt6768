@@ -3,6 +3,7 @@
  * fscrypt_private.h
  *
  * Copyright (C) 2015, Google, Inc.
+ * Copyright (C) 2021 XiaoMi, Inc.
  *
  * Originally written by Michael Halcrow, Ildar Muslukhov, and Uday Savagaonkar.
  * Heavily modified since then.
