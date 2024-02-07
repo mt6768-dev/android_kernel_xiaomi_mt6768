@@ -2277,7 +2277,7 @@ static int smb1351_set_usbchg_current(struct charger_device *chg_dev, u32 uA)
 {
 	struct smb1351_charger *chip = dev_get_drvdata(&chg_dev->dev);
 	int i, rc = 0;
-	static prev_current = -1;
+	static int prev_current = -1;
 	u8 reg = 0, mask = 0;
 	u32 current_ma = uA / 1000;
 
