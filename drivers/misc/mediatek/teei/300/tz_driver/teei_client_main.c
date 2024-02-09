@@ -1143,6 +1143,7 @@ static int teei_client_init(void)
 
 	wake_up_process(teei_bdrv_task);
 
+#ifdef CONFIG_MICROTRUST_TZ_LOG
 	init_tlog_comp_fn();
 
 	/* create the teei log thread */
@@ -1155,6 +1156,7 @@ static int teei_client_init(void)
 	}
 
 	wake_up_process(teei_log_task);
+#endif
 
 	IMSG_DEBUG("create the sub_thread successfully!\n");
 
