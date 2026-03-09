@@ -74,8 +74,10 @@ static INT32 wmt_ctrl_stp_conf(P_WMT_CTRL_DATA);
 static INT32 wmt_ctrl_free_patch(P_WMT_CTRL_DATA);
 static INT32 wmt_ctrl_get_patch(P_WMT_CTRL_DATA);
 static INT32 wmt_ctrl_host_baudrate_set(P_WMT_CTRL_DATA);
+#ifdef MTK_WCN_COMBO_CHIP_SUPPORT
 static INT32 wmt_ctrl_sdio_hw(P_WMT_CTRL_DATA);
 static INT32 wmt_ctrl_sdio_func(P_WMT_CTRL_DATA);
+#endif
 static INT32 wmt_ctrl_hwidver_set(P_WMT_CTRL_DATA);
 static INT32 wmt_ctrl_stp_rst(P_WMT_CTRL_DATA);
 static INT32 wmt_ctrl_get_wmt_conf(P_WMT_CTRL_DATA);
@@ -136,8 +138,10 @@ static const WMT_CTRL_FUNC wmt_ctrl_func[] = {
 	[WMT_CTRL_GET_PATCH] = wmt_ctrl_get_patch,
 	[WMT_CTRL_GET_PATCH_NAME] = wmt_ctrl_get_patch_name,
 	[WMT_CTRL_HOST_BAUDRATE_SET] = wmt_ctrl_host_baudrate_set,
+#ifdef MTK_WCN_COMBO_CHIP_SUPPORT
 	[WMT_CTRL_SDIO_HW] = wmt_ctrl_sdio_hw,
 	[WMT_CTRL_SDIO_FUNC] = wmt_ctrl_sdio_func,
+#endif
 	[WMT_CTRL_HWIDVER_SET] = wmt_ctrl_hwidver_set,
 	[WMT_CTRL_HWVER_GET] = NULL,	/* TODO: [FixMe][GeorgeKuo]: remove unused function. */
 	[WMT_CTRL_STP_RST] = wmt_ctrl_stp_rst,
@@ -511,6 +515,7 @@ INT32 wmt_ctrl_stp_close(P_WMT_CTRL_DATA pWmtCtrlData)
 {
 	P_DEV_WMT pDev = &gDevWmt;	/* single instance */
 	INT32 iRet = 0;
+#ifdef MTK_WCN_COMBO_CHIP_SUPPORT
 	UINT8 cmdStr[NAME_MAX + 1] = { 0 };
 	/* un-register to STP-core for rx */
 
@@ -530,6 +535,7 @@ INT32 wmt_ctrl_stp_close(P_WMT_CTRL_DATA pWmtCtrlData)
 			return -2;
 		}
 	}
+#endif
 	if (pDev->rWmtHifConf.hifType == WMT_HIF_BTIF) {
 		/*un-register rxcb to btif */
 		iRet = mtk_wcn_stp_rxcb_register(NULL);
@@ -554,6 +560,7 @@ INT32 wmt_ctrl_stp_open(P_WMT_CTRL_DATA pWmtCtrlData)
 {
 	P_DEV_WMT pDev = &gDevWmt;	/* single instance */
 	INT32 iRet;
+#ifdef MTK_WCN_COMBO_CHIP_SUPPORT
 	UINT8 cmdStr[NAME_MAX + 1] = { 0 };
 
 	if (pDev->rWmtHifConf.hifType == WMT_HIF_UART) {
@@ -564,6 +571,7 @@ INT32 wmt_ctrl_stp_open(P_WMT_CTRL_DATA pWmtCtrlData)
 			return -1;
 		}
 	}
+#endif
 	if (pDev->rWmtHifConf.hifType == WMT_HIF_BTIF) {
 		iRet = mtk_wcn_stp_open_btif();
 		if (iRet) {
@@ -993,6 +1001,7 @@ INT32 wmt_ctrl_host_baudrate_set(P_WMT_CTRL_DATA pWmtCtrlData)
 	return iRet;
 }
 
+#ifdef MTK_WCN_COMBO_CHIP_SUPPORT
 INT32 wmt_ctrl_sdio_hw(P_WMT_CTRL_DATA pWmtCtrlData)
 {
 	INT32 iRet = 0;
@@ -1098,6 +1107,7 @@ INT32 wmt_ctrl_sdio_func(P_WMT_CTRL_DATA pWmtCtrlData)
 
 	return iRet;
 }
+#endif
 
 #if 0
 /* TODO: [FixMe][GeorgeKuo]: remove unused function. get hwver from core is not needed. */
