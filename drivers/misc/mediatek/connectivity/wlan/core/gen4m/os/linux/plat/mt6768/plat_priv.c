@@ -50,6 +50,12 @@ uint32_t kalGetCpuBoostThreshold(void)
 }
 
 #if KERNEL_VERSION(5, 4, 0) <= CFG80211_VERSION_CODE || !defined(CONFIG_MTK_CPU_CTRL)
+int32_t kalBoostCpu(IN struct ADAPTER *prAdapter,
+		    IN uint32_t u4TarPerfLevel,
+		    IN uint32_t u4BoostCpuTh)
+{
+	return 0;
+}
 #else
 int32_t kalBoostCpu(IN struct ADAPTER *prAdapter,
 		    IN uint32_t u4TarPerfLevel,
@@ -122,4 +128,13 @@ int32_t kalGetFwFlavorByPlat(uint8_t *flavor)
 {
 	*flavor = 'a';
 	return 1;
+}
+
+int32_t kalCheckTputLoad(IN struct ADAPTER *prAdapter,
+			 IN uint32_t u4CurrPerfLevel,
+			 IN uint32_t u4TarPerfLevel,
+			 IN int32_t i4Pending,
+			 IN uint32_t u4Used)
+{
+	return FALSE;
 }
