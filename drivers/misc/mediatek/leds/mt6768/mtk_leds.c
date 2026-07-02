@@ -54,8 +54,8 @@ u16 pmic_set_register_value(u32 flagname, u32 val)
 #endif
 
 #if defined(CONFIG_KTD3136_SUPPORT) && defined(CONFIG_LM3697_SUPPORT)
-extern int ktd3137_brightness_set(int brightness);
-extern int lm3697_set_brightness(int brightness);
+extern int ktd3137_brightness_set(int brightness, int div);
+extern int lm3697_set_brightness(int brightness, int div);
 #endif
 
 static DEFINE_MUTEX(leds_mutex);

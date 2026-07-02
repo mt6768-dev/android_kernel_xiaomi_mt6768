@@ -377,15 +377,15 @@ static int ti_lmu_backlight_set_brightness(int brightness)
 	return ti_lmu_backlight_update_brightness_register(lmu_bl, brightness);
 }
 
-int lm3697_set_brightness(int brightness)
+int lm3697_set_brightness(int brightness, int div)
 {
-	printk(KERN_INFO "[bkl][before]%s brightness = %d\n", __func__, brightness);
+	printk(KERN_INFO "[bkl][before]%s brightness = %d, div = %d\n", __func__, brightness, div);
 	//return ti_lmu_backlight_update_brightness_register(bl_chip->lmu_bl, brightness);
 
 #ifdef CONFIG_TARGET_PRODUCT_MERLIN
 	if ((brightness < 6) && (brightness > 2)) {//HQ-61731
 		brightness = 6;
-		printk("%s: lyd_lowest_brightness, brightness = %d", __func__, brightness);
+		printk("%s: lyd_lowest_brightness, brightness = %d, div = %d", __func__, brightness, div);
 	}
 #endif
 
