@@ -95,7 +95,7 @@ static void SYSRAM_DumpResMgr(void)
 /* ------------------------------------------------------------------------------ */
 static inline bool SYSRAM_IsBadOwner(enum SYSRAM_USER_ENUM const User)
 {
-	if (User >= SYSRAM_USER_AMOUNT)
+	if (User >= SYSRAM_USER_AMOUNT || User < 0)
 		return MTRUE;
 	else
 		return MFALSE;

@@ -152,11 +152,9 @@ struct ISP_WAIT_IRQ_STRUCT {
 	struct ISP_WAIT_IRQ_ST EventInfo;
 };
 
-#define USERKEY_STR_LEN	32
-
 struct ISP_REGISTER_USERKEY_STRUCT {
 	int userKey;
-	char userName[USERKEY_STR_LEN]; /* this size must the same as the icamiopipe api
+	char userName[32]; /* this size must the same as the icamiopipe api
 			    * - registerIrq(...)
 			    */
 };
@@ -583,17 +581,10 @@ struct ISP_PM_QOS_STRUCT {
 	unsigned int       bw_sum;
 };
 
-/* For k510 compatible */
-struct ISP_BW {
-	unsigned int peak;
-	unsigned int avg;
-};
-
 struct ISP_PM_QOS_INFO_STRUCT {
 	unsigned int       bw_value;
 	unsigned int       module;
 	unsigned int       fps;
-	struct ISP_BW      port_bw[_cam_max_]; /* For k510 compatible */
 };
 
 /*******************************************************************************
