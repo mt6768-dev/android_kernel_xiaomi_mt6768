@@ -1,0 +1,75 @@
+name: Build Kernel KSU Next A13
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependensi
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc bison flex libssl-dev libelf-dev zip device-tree-compiler curl git python2 lz4 cpio
+          sudo apt-get install -y libtinfo5 || true
+          sudo ln -sf /usr/bin/python2 /usr/bin/python
+
+      - name: Pasang KernelSU Next legacy
+        run: curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s legacy
+
+      - name: Tambal bug ksu_init_rc_hook
+        run: |
+          python3 - <<'EOF'
+          p = "drivers/kernelsu/runtime/ksud_integration.c"
+          s = open(p).read()
+          key = "void stop_init_rc_hook();"
+          if "static bool ksu_init_rc_hook" not in s and key in s:
+              s = s.replace(key, key + "\nstatic bool ksu_init_rc_hook = true;", 1)
+          open(p, "w").write(s)
+          EOF
+          grep -n "ksu_init_rc_hook" drivers/kernelsu/runtime/ksud_integration.c
+
+      - name: Cari defconfig dan aktifkan KSU
+        run: |
+          echo "=== DAFTAR DEFCONFIG ==="
+          ls arch/arm64/configs | grep -i -E "merlin|mt6768|lancelot" || true
+          DEF=$(ls arch/arm64/configs | grep -i merlin | head -1)
+          [ -z "$DEF" ] && DEF=$(ls arch/arm64/configs | grep -i mt6768 | head -1)
+          echo "Pakai defconfig: $DEF"
+          test -n "$DEF"
+          echo "DEF=$DEF" >> $GITHUB_ENV
+          printf 'CONFIG_KSU=y\nCONFIG_KPROBES=y\nCONFIG_HAVE_KPROBES=y\nCONFIG_KPROBE_EVENTS=y\n' >> arch/arm64/configs/$DEF
+
+      - name: Download Proton Clang
+        run: git clone --depth=1 https://github.com/kdrag0n/proton-clang clang-13/aaa
+
+      - name: Build
+        run: |
+          export PATH=$PWD/clang-13/aaa/bin:$PATH
+          MK="make -j$(nproc) O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip"
+          $MK $DEF > build.log 2>&1 || true
+          $MK >> build.log 2>&1 || true
+          [ -f out/arch/arm64/boot/Image.gz-dtb ] || $MK Image.gz-dtb >> build.log 2>&1 || true
+          echo "=== RINGKASAN ERROR ==="
+          grep -n -E "error:|\*\*\* \[|undefined reference" build.log | head -40 || true
+          echo "=== ISI BOOT ==="
+          ls -la out/arch/arm64/boot || true
+
+      - name: Cek hasil build
+        run: test -f out/arch/arm64/boot/Image.gz-dtb
+
+      - name: Buat zip AnyKernel3
+        run: |
+          git clone --depth=1 https://github.com/osm0sis/AnyKernel3 AK3
+          rm -rf AK3/.git
+          cp out/arch/arm64/boot/Image.gz-dtb AK3/
+          sed -i 's|^block=.*|block=/dev/block/by-name/boot;|I; s|^do.devicecheck=.*|do.devicecheck=0|I; s|^is_slot_device=.*|is_slot_device=0;|I' AK3/anykernel.sh
+          cd AK3 && zip -r9 ../kernel-merlin-ksunext.zip .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kernel-merlin-ksunext
+          path: |
+            kernel-merlin-ksunext.zip
+            out/arch/arm64/boot/Image.gz-dtb
