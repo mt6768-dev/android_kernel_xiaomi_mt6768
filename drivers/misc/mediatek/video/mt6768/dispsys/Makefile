@@ -99,7 +99,9 @@ obj-y += ddp_pwm_mux.o
 ifeq ($(CONFIG_MACH_MT6768),y)
 obj-y += ddp_disp_bdg.o
 endif
+ifeq ($(CONFIG_MMPROFILE), y)
 obj-y += ddp_mmp.o
+endif
 obj-y += ddp_met.o
 
 obj-y += display_recorder.o
