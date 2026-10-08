@@ -526,7 +526,7 @@ struct ISP_IRQ_ERR_WAN_CNT_STRUCT {
 };
 
 static int FirstUnusedIrqUserKey = 1;
-#define USERKEY_STR_LEN 128
+
 
 struct UserKeyInfo {
 	/* name for the user that register a userKey */
@@ -2101,6 +2101,11 @@ static int ISP_WaitIrq(struct ISP_WAIT_IRQ_STRUCT *WaitIrq)
 	usec = do_div(sec, 1000000);    /* sec and usec */
 	time_getrequest.tv_usec = (unsigned int)usec;
 	time_getrequest.tv_sec = (unsigned int)sec;
+
+	if (idx >= 32 || idx < 0) {
+		LOG_NOTICE("WaitIrq: idx error(%d)", idx);
+		return -EFAULT;
+	}
 
 	if (WaitIrq->Type >= ISP_IRQ_TYPE_AMOUNT ||
 	    WaitIrq->Type < 0) {

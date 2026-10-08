@@ -519,7 +519,6 @@ struct ISP_IRQ_ERR_WAN_CNT_STRUCT {
 };
 
 static int FirstUnusedIrqUserKey = 1;
-#define USERKEY_STR_LEN 128
 
 struct UserKeyInfo {
 	/* name for the user that register a userKey */
@@ -2417,6 +2416,11 @@ static int ISP_WaitIrq(struct ISP_WAIT_IRQ_STRUCT *WaitIrq)
 	    WaitIrq->EventInfo.UserKey < 0) {
 		LOG_NOTICE("WaitIrq: userkey error(%d)",
 			WaitIrq->EventInfo.UserKey);
+		return -EFAULT;
+	}
+
+	if ((idx < 0) || (idx >= 32)) {
+		LOG_NOTICE("[Error] %s : Invalid idx = %d\n",  __func__, idx);
 		return -EFAULT;
 	}
 

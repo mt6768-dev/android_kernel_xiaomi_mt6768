@@ -4241,7 +4241,7 @@ static long ISP_REF_CNT_CTRL_FUNC(unsigned long Param)
 	/*      */
 	if (copy_from_user(&ref_cnt_ctrl, (void __user *)Param, sizeof(struct ISP_REF_CNT_CTRL_STRUCT)) ==
 	    0) {
-		if ((ref_cnt_ctrl.id < 0) || (ref_cnt_ctrl.id >= ISP_REF_CNT_ID_MAX)) {
+		if (ref_cnt_ctrl.id >= ISP_REF_CNT_ID_MAX) {
 			LOG_PR_ERR("[rc] invalid ref_cnt_ctrl.id %d\n", ref_cnt_ctrl.id);
 			return -EFAULT;
 		}
@@ -4978,7 +4978,7 @@ static long ISP_Buf_CTRL_FUNC(unsigned long Param)
 	unsigned long p1_dma_addr_reg[_rt_dma_max_];
 	unsigned long flags; /* old: unsigned int flags;*//* FIX to avoid build warning */
 	struct ISP_RT_BUF_INFO_STRUCT rt_buf_info;
-	struct ISP_DEQUE_BUF_INFO_STRUCT deque_buf;
+	struct ISP_DEQUE_BUF_INFO_STRUCT deque_buf = {0};
 	enum eISPIrq irqT = _IRQ_MAX;
 	enum eISPIrq irqT_Lock = _IRQ_MAX;
 	bool CurVF_En = MFALSE;
@@ -8057,8 +8057,7 @@ static signed int ISP_MARK_IRQ(struct ISP_WAIT_IRQ_STRUCT irqinfo)
 			IRQ_USER_NUM_MAX);
 		return 0;
 	}
-	if ((irqinfo.UserInfo.Type >= ISP_IRQ_TYPE_AMOUNT)
-		|| (irqinfo.UserInfo.Type < 0)) {
+	if (irqinfo.UserInfo.Type >= ISP_IRQ_TYPE_AMOUNT) {
 		LOG_PR_ERR("invalid type(%d), max(%d)", irqinfo.UserInfo.Type,
 			ISP_IRQ_TYPE_AMOUNT);
 		return 0;
@@ -8079,8 +8078,7 @@ static signed int ISP_MARK_IRQ(struct ISP_WAIT_IRQ_STRUCT irqinfo)
 
 	spin_lock_irqsave(&(IspInfo.SpinLockIrq[eIrq]), flags);
 	if ((irqinfo.UserInfo.UserKey < 0) || (irqinfo.UserInfo.UserKey >= IRQ_USER_NUM_MAX) ||
-		(irqinfo.UserInfo.Type < 0) || (irqinfo.UserInfo.Type >= ISP_IRQ_TYPE_AMOUNT) ||
-		(idx < 0) || (idx >= 32)) {
+		(irqinfo.UserInfo.Type >= ISP_IRQ_TYPE_AMOUNT) ||(idx < 0) || (idx >= 32)) {
 		LOG_DBG("Error: Invalid Index");
 		return 0;
 	}
@@ -8149,8 +8147,7 @@ static signed int ISP_GET_MARKtoQEURY_TIME(struct ISP_WAIT_IRQ_STRUCT *irqinfo)
 		Ret = -EFAULT;
 		return Ret;
 	}
-	if ((irqinfo->UserInfo.Type >= ISP_IRQ_TYPE_AMOUNT)
-		|| (irqinfo->UserInfo.Type < 0)) {
+	if (irqinfo->UserInfo.Type >= ISP_IRQ_TYPE_AMOUNT) {
 		LOG_PR_ERR("invalid type(%d), max(%d)", irqinfo->UserInfo.Type,
 			ISP_IRQ_TYPE_AMOUNT);
 		Ret = -EFAULT;
@@ -8302,8 +8299,7 @@ static signed int ISP_FLUSH_IRQ_V3(struct ISP_WAIT_IRQ_STRUCT irqinfo)
 			irqinfo.UserInfo.UserKey, IRQ_USER_NUM_MAX);
 		return 0;
 	}
-	if ((irqinfo.UserInfo.Type >= ISP_IRQ_TYPE_AMOUNT)
-		|| (irqinfo.UserInfo.Type < 0)) {
+	if (irqinfo.UserInfo.Type >= ISP_IRQ_TYPE_AMOUNT) {
 		LOG_PR_ERR("invalid type(%d), max(%d)\n",
 			irqinfo.UserInfo.Type, ISP_IRQ_TYPE_AMOUNT);
 		return 0;
@@ -8479,7 +8475,7 @@ static signed int ISP_WaitIrq(struct ISP_WAIT_IRQ_STRUCT *WaitIrq)
 				gEismetaRIdx_D = (gEismetaWIdx_D - gEismetaInSOF_D - 1);
 			}
 
-			if ((gEismetaRIdx_D < 0) || (gEismetaRIdx_D >= EISMETA_RINGSIZE)) {
+			if (gEismetaRIdx_D >= EISMETA_RINGSIZE) {
 				/* BUG_ON(1); */
 				gEismetaRIdx_D = 0;
 				/* TBD WARNING */
@@ -8592,8 +8588,7 @@ static signed int ISP_WaitIrq_v3(struct ISP_WAIT_IRQ_STRUCT *WaitIrq)
 			WaitIrq->UserInfo.UserKey, IRQ_USER_NUM_MAX);
 		return 0;
 	}
-	if ((WaitIrq->UserInfo.Type >= ISP_IRQ_TYPE_AMOUNT)
-		|| (WaitIrq->UserInfo.Type < 0)) {
+	if (WaitIrq->UserInfo.Type >= ISP_IRQ_TYPE_AMOUNT) {
 		LOG_PR_ERR("invalid type(%d), max(%d)\n",
 			WaitIrq->UserInfo.Type, ISP_IRQ_TYPE_AMOUNT);
 		return 0;
@@ -8743,7 +8738,7 @@ static signed int ISP_WaitIrq_v3(struct ISP_WAIT_IRQ_STRUCT *WaitIrq)
 				gEismetaRIdx = (gEismetaWIdx - gEismetaInSOF - 1);
 			}
 
-			if ((gEismetaRIdx < 0) || (gEismetaRIdx >= EISMETA_RINGSIZE)) {
+			if (gEismetaRIdx >= EISMETA_RINGSIZE) {
 				/* BUG_ON(1); */
 				gEismetaRIdx = 0;
 				/* TBD WARNING */
@@ -8772,7 +8767,7 @@ static signed int ISP_WaitIrq_v3(struct ISP_WAIT_IRQ_STRUCT *WaitIrq)
 				gEismetaRIdx_D = (gEismetaWIdx_D - gEismetaInSOF_D - 1);
 			}
 
-			if ((gEismetaRIdx_D < 0) || (gEismetaRIdx_D >= EISMETA_RINGSIZE)) {
+			if (gEismetaRIdx_D >= EISMETA_RINGSIZE) {
 				/* BUG_ON(1); */
 				gEismetaRIdx_D = 0;
 				/* TBD WARNING */

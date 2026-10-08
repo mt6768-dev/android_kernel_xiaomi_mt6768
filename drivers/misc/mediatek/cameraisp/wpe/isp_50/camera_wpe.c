@@ -3219,6 +3219,8 @@ static signed int WPE_WriteRegToHw
 
 		if (((ISP_WPE_BASE + pReg[i].Addr) <
 			(ISP_WPE_BASE + WPE_REG_RANGE))
+			&& ((ISP_WPE_BASE + pReg[i].Addr) >=
+			ISP_WPE_BASE)
 			&& ((pReg[i].Addr & 0x3) == 0)) {
 			WPE_WR32(ISP_WPE_BASE + pReg[i].Addr, pReg[i].Val);
 		} else {
@@ -4770,7 +4772,7 @@ static long WPE_ioctl_compat(
 
 			err = compat_put_WPE_deque_req_data(data32, data);
 			if (err) {
-				LOG_INF("COMPAT_WPE_WPE_DEQUE_REQ error!!!\n");
+				LOG_INF("COMPAT_WPE_WPE_DEQUE_DONE error!!!\n");
 				return err;
 			}
 			return ret;

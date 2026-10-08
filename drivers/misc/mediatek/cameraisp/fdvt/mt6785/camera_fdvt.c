@@ -1320,11 +1320,13 @@ static bool UpdateFDVT(pid_t *ProcessID)
 					break;
 				}
 			}
+			/*
 			IRQ_LOG_KEEPER(FDVT_IRQ_TYPE_INT_FDVT_ST,
 				       m_CurrentPPB,
 				       _LOG_DBG,
 				       "%s idx j:%d\n",
 				       __func__, j);
+			*/
 			if (j != _SUPPORT_MAX_FDVT_FRAME_REQUEST_) {
 				next_idx = j + 1;
 				g_FDVT_ReqRing.FDVTReq_Struct
@@ -2932,6 +2934,14 @@ if (copy_from_user(&enqueNum,
 	if (FDVT_REQUEST_STATE_EMPTY ==
 		g_FDVT_ReqRing.FDVTReq_Struct
 		[g_FDVT_ReqRing.WriteIdx].State) {
+		if (enqueNum >
+			_SUPPORT_MAX_FDVT_FRAME_REQUEST_) {
+			log_err(
+			"FDVT Enque Num is bigger than enqueNum:%d\n",
+			enqueNum);
+			Ret = -EFAULT;
+			break;
+		}
 		spin_lock_irqsave(&
 		(FDVTInfo.SpinLockIrq
 		[FDVT_IRQ_TYPE_INT_FDVT_ST]),
@@ -2945,12 +2955,6 @@ if (copy_from_user(&enqueNum,
 		spin_unlock_irqrestore(&
 		(FDVTInfo.SpinLockIrq[FDVT_IRQ_TYPE_INT_FDVT_ST]),
 		flags);
-		if (enqueNum >
-			_SUPPORT_MAX_FDVT_FRAME_REQUEST_) {
-			log_err(
-			"FDVT Enque Num is bigger than enqueNum:%d\n",
-			enqueNum);
-		}
 		log_dbg("FDVT_ENQNUE_NUM:%d\n",
 		enqueNum);
 		} else {
@@ -4864,11 +4868,13 @@ static irqreturn_t ISP_Irq_FDVT(signed int Irq, void *DeviceId)
 		wake_up_interruptible(&FDVTInfo.WaitQueueHead);
 
 	/* dump log, use tasklet */
+/*
 	IRQ_LOG_KEEPER(FDVT_IRQ_TYPE_INT_FDVT_ST, m_CurrentPPB, _LOG_INF,
 		       "Irq_FDVT:%d, reg 0x%x : 0x%x, bResulst:%d, FdvtHWSta:0x%x, FdvtIrqCnt:0x%x, WriteReqIdx:0x%x, ReadReqIdx:0x%x\n",
 		       Irq, FDVT_INT_HW, FdvtStatus, bResulst, FdvtStatus,
 		       FDVTInfo.IrqInfo.FdvtIrqCnt,
 		       FDVTInfo.WriteReqIdx, FDVTInfo.ReadReqIdx);
+*/
 	/* IRQ_LOG_KEEPER(FDVT_IRQ_TYPE_INT_FDVT_ST, m_CurrentPPB, _LOG_INF,
 	 *  "FdvtHWSta:0x%x, FdvtHWSta:0x%x,
 	 *  DpeDveSta0:0x%x\n", DveStatus, FdvtStatus, DpeDveSta0);

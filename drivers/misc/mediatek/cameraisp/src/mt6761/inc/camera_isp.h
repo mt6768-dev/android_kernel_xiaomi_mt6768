@@ -392,6 +392,15 @@ enum ISP_PASS1_PATH_ENUM {
 	ISP_PASS1_PATH_TYPE_AMOUNT
 };
 
+enum ISP_CAM_TYPE_ENUM {
+	ISP_CAM_TYPE_CAM0 = 0,	/* cam0 */
+	ISP_CAM_TYPE_CAM1,		/* cam1 */
+	ISP_CAM_TYPE_CAM_AMOUNT,
+	ISP_CAM_TYPE_CAMSV0 = ISP_CAM_TYPE_CAM_AMOUNT,	/* camsv0 */
+	ISP_CAM_TYPE_CAMSV1,		/* camsv1 */
+	ISP_CAM_TYPE_CAMSV_AMOUNT
+};
+
 enum ISP_IRQ_USER_ENUM {
 	ISP_IRQ_USER_ISPDRV = 0,
 	ISP_IRQ_USER_MW = 1,
@@ -577,10 +586,17 @@ enum _isp_dma_enum_ {
 	_camsv2_imgo_,		/* 16 */
 	_mfbo_,			/* 17 */
 	_feo_,			/* 18 */
-	_wrot_,			/* 19 */
-	_wdma_,			/* 20 */
-	_jpeg_,			/* 21 */
-	_venc_stream_,		/* 21 */
+	_aao_,			/* 19 */
+	_aao_d_,		/* 20 */
+	_afo_,			/* 21 */
+	_afo_d_,		/* 22 */
+	_lcso_,			/* 23 */
+	_lcso_d_,		/* 24 */
+	_esfko_,		/* 25 */
+	_wrot_,			/* 26 */
+	_wdma_,			/* 27 */
+	_jpeg_,			/* 28 */
+	_venc_stream_,	/* 29 */
 	_rt_dma_max_
 };
 /*  */
@@ -737,18 +753,26 @@ struct ISP_REF_CNT_CTRL_STRUCT {
 	signed int *data_ptr;
 };
 
+/* For k510 */
+struct ISP_BW {
+	unsigned int peak;
+	unsigned int avg;
+};
+
 struct ISP_PM_QOS_STRUCT {
 	unsigned int       fps;
 	unsigned int       bw_sum;
 	bool               upd_flag;
 	bool               sof_flag;
 	unsigned int       module;
+	struct ISP_BW      port_bw[_rt_dma_max_]; /* For k510 */
 };
 
 struct ISP_PM_QOS_INFO_STRUCT {
 	unsigned int       bw_value;
 	unsigned int       module;
 	unsigned int       fps;
+	struct ISP_BW      port_bw[_rt_dma_max_]; /* For k510 */
 };
 
 /* struct for enqueue/dequeue control in ihalpipe wrapper */
@@ -979,6 +1003,7 @@ enum ISP_CMD_ENUM {
 	ISP_CMD_SET_PM_QOS_INFO,
 	ISP_CMD_SET_ISPCLK,
 	ISP_CMD_GET_ISPCLK,
+	ISP_CMD_CLR_ISPCLK,
 	ISP_CMD_WAKELOCK_CTRL,
 	ISP_CMD_GET_VSYNC_CNT,
 	ISP_CMD_RESET_VSYNC_CNT,
@@ -1055,6 +1080,8 @@ enum ISP_CMD_ENUM {
 	_IOWR(ISP_MAGIC, ISP_CMD_SET_ISPCLK, unsigned int)
 #define ISP_GET_ISPCLK \
 	_IOWR(ISP_MAGIC, ISP_CMD_GET_ISPCLK, unsigned int)
+#define ISP_CLR_ISPCLK \
+	_IOWR(ISP_MAGIC, ISP_CMD_CLR_ISPCLK, unsigned int)
 #define ISP_REGISTER_IRQ_USER_KEY \
 	_IOR(ISP_MAGIC, ISP_CMD_REGISTER_IRQ_USER_KEY, \
 		struct ISP_REGISTER_USERKEY_STRUCT)

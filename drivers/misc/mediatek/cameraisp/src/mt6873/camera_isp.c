@@ -3480,6 +3480,12 @@ static int ISP_WaitIrq(struct ISP_WAIT_IRQ_STRUCT *WaitIrq)
 	unsigned long long sec = 0;
 	unsigned long usec = 0;
 
+	if ((idx > 31) || (idx < 0)) {
+		LOG_NOTICE("Error: Invalid idx(%d),Status(0x%x)\n",
+			idx, WaitIrq->EventInfo.Status);
+		return -EFAULT;
+	}
+
 	/* do_gettimeofday(&time_getrequest); */
 	sec = cpu_clock(0);	  /* ns */
 	do_div(sec, 1000);	   /* usec */

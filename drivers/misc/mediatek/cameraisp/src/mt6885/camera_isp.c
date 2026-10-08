@@ -587,7 +587,6 @@ struct ISP_IRQ_ERR_WAN_CNT_STRUCT {
 };
 
 static int FirstUnusedIrqUserKey = 1;
-#define USERKEY_STR_LEN 128
 
 struct UserKeyInfo {
 	/* name for the user that register a userKey */
@@ -679,6 +678,7 @@ static spinlock_t SpinLockCqCnt[ISP_CAM_C_IDX-ISP_CAM_A_IDX+1];
 static unsigned int g_ExposureNum[ISP_CAM_C_IDX-ISP_CAM_A_IDX+1] = {EXP_ONE};
 static unsigned int g_ExpectedBufCqCnt[ISP_CAM_C_IDX-ISP_CAM_A_IDX+1] = {0};
 static unsigned int g_CompletedBufCqCnt[ISP_CAM_C_IDX-ISP_CAM_A_IDX+1] = {0};
+static unsigned int g_SOFCqCnt[ISP_CAM_C_IDX-ISP_CAM_A_IDX+1] = {0};
 static unsigned int g_RequestBufCqCnt[ISP_CAM_C_IDX-ISP_CAM_A_IDX+1] = {0};
 static bool g_bSwitchTo1ExpDone;
 
@@ -3767,6 +3767,12 @@ static int ISP_WaitIrq(struct ISP_WAIT_IRQ_STRUCT *WaitIrq)
 	unsigned long long sec = 0;
 	unsigned long usec = 0;
 
+	if ((idx > 31) || (idx < 0)) {
+		LOG_NOTICE("Error: Invalid idx(%d),Status(0x%x)\n",
+			idx, WaitIrq->EventInfo.Status);
+		return -EFAULT;
+	}
+
 	/* do_gettimeofday(&time_getrequest); */
 	sec = cpu_clock(0);	  /* ns */
 	do_div(sec, 1000);	   /* usec */
@@ -6773,7 +6779,7 @@ static int ISP_release(struct inode *pInode, struct file *pFile)
 {
 	struct ISP_USER_INFO_STRUCT *pUserInfo;
 	unsigned int Reg;
-	unsigned int i = 0;
+	unsigned int i = 0, module = 0;
 
 	mutex_lock(&open_isp_mutex);
 	LOG_DBG("- E. UserCount: %d.\n", IspInfo.UserCount);
@@ -6897,6 +6903,7 @@ static int ISP_release(struct inode *pInode, struct file *pFile)
 		g_ExposureNum[i] = EXP_ONE;
 		g_ExpectedBufCqCnt[i] = 0;
 		g_RequestBufCqCnt[i] = 0;
+		g_CompletedBufCqCnt[i] = 0;
 	}
 
 #ifdef ENABLE_KEEP_ION_HANDLE
@@ -6919,6 +6926,12 @@ static int ISP_release(struct inode *pInode, struct file *pFile)
 	spin_lock(&(IspInfo.SpinLockClock));
 	i = G_u4EnableClockCount;
 	spin_unlock(&(IspInfo.SpinLockClock));
+
+	if (i == 1) { /* if G_u4EnableClockCount==1, do blocking wait for workqueue to finish */
+		for (module = ISP_IRQ_TYPE_INT_CAM_A_ST; module < ISP_IRQ_TYPE_AMOUNT; module++)
+			cancel_work_sync(&isp_workque[module].isp_bh_work);
+	}
+
 	while (i > 0) {
 		ISP_EnableClock(MFALSE);
 		i--;
@@ -11515,6 +11528,37 @@ irqreturn_t ISP_Irq_CAM(enum ISP_IRQ_TYPE_ENUM irq_module)
 		}
 	}
 
+	/* Seamless switch. process align hw p1 done*/
+	spin_lock(&(SpinLockCqCnt[module]));
+	if (IrqStatus & SW_PASS1_DON_ST) {
+		/* record buffer Cq counter which is done */
+		g_CompletedBufCqCnt[module] = g_SOFCqCnt[module];
+	}
+
+	if ((IrqStatus & HW_PASS1_DON_ST) && g_ExpectedBufCqCnt[module] != 0) {
+		if (g_ExpectedBufCqCnt[module] == g_CompletedBufCqCnt[module]) {
+			g_ExpectedBufCqCnt[module] = 0;
+			spin_unlock(&(SpinLockCqCnt[module]));
+			//disable TG db buffer
+			ISP_WR32(CAM_REG_TG_PATH_CFG(reg_module),
+				(ISP_RD32(CAM_REG_TG_PATH_CFG(reg_module)) | 0x100));
+
+			ISP_WR32(CAM_REG_TG_VF_CON(reg_module),
+				(ISP_RD32(CAM_REG_TG_VF_CON(reg_module)) & 0xFFFFFFFE));
+			ISP_WR32(CAM_REG_TG_SEN_MODE(reg_module),
+				 (ISP_RD32(CAM_REG_TG_SEN_MODE(reg_module)) &
+				  0xFFFFFFFE));
+
+#if (ISP_BOTTOMHALF_WORKQ == 1)
+			schedule_work(&isp_workque_switch[module].isp_bh_work);
+#endif
+		} else {
+			spin_unlock(&(SpinLockCqCnt[module]));
+		}
+	} else {
+		spin_unlock(&(SpinLockCqCnt[module]));
+	}
+
 	spin_lock(&(IspInfo.SpinLockIrq[module]));
 	if (IrqStatus & VS_INT_ST) {
 		Vsync_cnt[cardinalNum]++;
@@ -12368,7 +12412,8 @@ irqreturn_t ISP_Irq_CAM(enum ISP_IRQ_TYPE_ENUM irq_module)
 					CAM_REG_YUVO_FH_BASE_ADDR(
 						ISP_CAM_C_INNER_IDX)));
 #endif
-
+			/* record buffer Cq counter which is done */
+			g_SOFCqCnt[module] = ISP_RD32(CAM_REG_DMA_CQ_COUNTER(inner_reg_module));
 #ifdef ENABLE_STT_IRQ_LOG /*STT addr */
 			IRQ_LOG_KEEPER(
 				module, m_CurrentPPB, _LOG_INF,
@@ -12558,37 +12603,6 @@ LB_CAM_SOF_IGNORE:
 	}
 	wake_up_interruptible(&IspInfo.WaitQueueHead[module]);
 
-	/* Seamless switch. process align hw p1 done*/
-	spin_lock(&(SpinLockCqCnt[module]));
-	if (IrqStatus & SW_PASS1_DON_ST) {
-		/* record buffer Cq counter which is done */
-		g_CompletedBufCqCnt[module] = ISP_RD32(CAM_REG_DMA_CQ_COUNTER(inner_reg_module));
-	}
-
-	if ((IrqStatus & HW_PASS1_DON_ST) && g_ExpectedBufCqCnt[module] != 0) {
-		if (g_ExpectedBufCqCnt[module] == g_CompletedBufCqCnt[module]) {
-			g_ExpectedBufCqCnt[module] = 0;
-			spin_unlock(&(SpinLockCqCnt[module]));
-			//disable TG db buffer
-			ISP_WR32(CAM_REG_TG_PATH_CFG(reg_module),
-				(ISP_RD32(CAM_REG_TG_PATH_CFG(reg_module)) | 0x100));
-
-			ISP_WR32(CAM_REG_TG_VF_CON(reg_module),
-				(ISP_RD32(CAM_REG_TG_VF_CON(reg_module)) & 0xFFFFFFFE));
-			ISP_WR32(CAM_REG_TG_SEN_MODE(reg_module),
-				 (ISP_RD32(CAM_REG_TG_SEN_MODE(reg_module)) &
-				  0xFFFFFFFE));
-
-#if (ISP_BOTTOMHALF_WORKQ == 1)
-			schedule_work(&isp_workque_switch[module].isp_bh_work);
-#endif
-		} else {
-			spin_unlock(&(SpinLockCqCnt[module]));
-		}
-	} else {
-		spin_unlock(&(SpinLockCqCnt[module]));
-	}
-
 	/* dump log, use workq */
 	if ((IrqStatus & (SOF_INT_ST | HW_PASS1_DON_ST | VS_INT_ST)) ||
 		ErrStatus) {
@@ -12698,6 +12712,42 @@ EXIT_CQ_RECOVER:
 }
 
 
+static void ISP_CAMSV_VFON(unsigned int irqModule)
+{
+	/*
+	 * 1. VF off
+	 * 2. SW RESET
+	 * 3. CAM MUX
+	 * 4. CAMSV SETTING
+	 * 5. VF ON
+	 */
+#ifndef DISABLE_SV_TOP0
+	unsigned int Reg;
+
+	switch (g_ExposureNum[irqModule]) {
+	case EXP_ONE:
+		break;
+	case EXP_TWO:
+		/* 2-exp Stagger */
+		/* VF on */
+		Reg = ISP_RD32(CAMSV_REG_TG_VF_CON(ISP_CAMSV0_IDX));
+		ISP_WR32(CAMSV_REG_TG_VF_CON(ISP_CAMSV0_IDX), Reg | 0x1);
+		break;
+	case EXP_THREE:
+		/* 3-exp Stagger */
+		/* VF on */
+		Reg = ISP_RD32(CAMSV_REG_TG_VF_CON(ISP_CAMSV0_IDX));
+		ISP_WR32(CAMSV_REG_TG_VF_CON(ISP_CAMSV0_IDX), Reg | 0x1);
+		Reg = ISP_RD32(CAMSV_REG_TG_VF_CON(ISP_CAMSV1_IDX));
+		ISP_WR32(CAMSV_REG_TG_VF_CON(ISP_CAMSV1_IDX), Reg | 0x1);
+		break;
+	default:
+		LOG_NOTICE("error: no support %d-exp stagger\n", g_ExposureNum[irqModule]);
+		break;
+	}
+#endif
+}
+
 static void ISP_CAMSV_Config(unsigned int irqModule)
 {
 	/*
@@ -12758,10 +12808,6 @@ static void ISP_CAMSV_Config(unsigned int irqModule)
 		ISP_WR32(CAMSV_REG_TG_PATH_CFG(ISP_CAMSV1_IDX), (Reg & 0xffcfffff));
 		Reg = ISP_RD32(CAMSV_REG_DCIF_SET(ISP_CAMSV1_IDX));
 		ISP_WR32(CAMSV_REG_DCIF_SET(ISP_CAMSV1_IDX), (Reg & 0xffff7fff));
-
-		/* VF on */
-		Reg = ISP_RD32(CAMSV_REG_TG_VF_CON(ISP_CAMSV0_IDX));
-		ISP_WR32(CAMSV_REG_TG_VF_CON(ISP_CAMSV0_IDX), Reg | 0x1);
 		break;
 	case EXP_THREE:
 		/* 3-exp Stagger */
@@ -12789,12 +12835,6 @@ static void ISP_CAMSV_Config(unsigned int irqModule)
 		ISP_WR32(CAMSV_REG_TG_PATH_CFG(ISP_CAMSV1_IDX), (Reg & 0xffcfffff));
 		Reg = ISP_RD32(CAMSV_REG_DCIF_SET(ISP_CAMSV1_IDX));
 		ISP_WR32(CAMSV_REG_DCIF_SET(ISP_CAMSV1_IDX), (Reg | 0x8000));
-
-		/* VF on */
-		Reg = ISP_RD32(CAMSV_REG_TG_VF_CON(ISP_CAMSV0_IDX));
-		ISP_WR32(CAMSV_REG_TG_VF_CON(ISP_CAMSV0_IDX), Reg | 0x1);
-		Reg = ISP_RD32(CAMSV_REG_TG_VF_CON(ISP_CAMSV1_IDX));
-		ISP_WR32(CAMSV_REG_TG_VF_CON(ISP_CAMSV1_IDX), Reg | 0x1);
 		break;
 	default:
 		LOG_NOTICE("error: no support %d-exp stagger\n", g_ExposureNum[irqModule]);
@@ -13026,6 +13066,7 @@ static void ISP_BH_Switch_Workqueue(struct work_struct *pWork)
 		 (ISP_RD32(CAM_REG_TG_SEN_MODE(reg_module)) | 0x1));
 	ISP_WR32(CAM_REG_TG_VF_CON(reg_module),
 		 (ISP_RD32(CAM_REG_TG_VF_CON(reg_module)) | 0x1));
+	ISP_CAMSV_VFON(irq_module); //CAMSV VF on
 	LOG_NOTICE(
 		"turn on TG VF, CMOS to do seamless switch 0x%x, 0x%x, 0x%x",
 		(unsigned int)ISP_RD32(CAM_REG_TG_PATH_CFG(reg_module)),
