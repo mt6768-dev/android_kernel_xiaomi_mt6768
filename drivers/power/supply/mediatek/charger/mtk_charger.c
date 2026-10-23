@@ -936,7 +936,9 @@ void charger_manager_set_prop_system_temp_level(int temp_level)
 		is_cn = true;
 #endif
 	pr_err("thermal_pcba is %d, is_cn:%d\n", pcba_to_thermal, is_cn);
-	if (temp_level > pinfo->system_temp_level_max)
+	if (temp_level < 0)
+		pinfo->system_temp_level = 0;
+	else if (temp_level > pinfo->system_temp_level_max)
 		pinfo->system_temp_level = pinfo->system_temp_level_max;
 	else
 		pinfo->system_temp_level = temp_level;
