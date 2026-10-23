@@ -557,7 +557,7 @@ static __s16 mtk_ts_bts_volt_to_temp(__u32 dwVolt)
 	 * dwVCriAP = (TAP_OVER_CRITICAL_LOW * RAP_PULL_UP_VOLT) /
 	 *		(TAP_OVER_CRITICAL_LOW + RAP_PULL_UP_R);
 	 */
-	pr_notice("[mtk_ts_bts_volt_to_temp]dwVolt1 =%d\n", dwVolt);
+	mtkts_blkntc_dprintk("[mtk_ts_bts_volt_to_temp]dwVolt1 =%d\n", dwVolt);
 	blk_ntc_volt = dwVolt;//xujia add for blk ntc compatible
 	dwVCriAP = (g_TAP_over_critical_low * g_RAP_pull_up_voltage)
 		/ (g_TAP_over_critical_low + g_RAP_pull_up_R);
@@ -600,7 +600,8 @@ static int get_hw_bts_temp(void)
 			printk(KERN_ERR"[%s] iio_read_channel_processed failed\n", __func__);
 			return ret_value;
 		}
-		id_volt = (auxadc_voltage * 1500 / 4096);
+		/* mt6577_auxadc already returns millivolts for processed reads */
+		id_volt = auxadc_voltage;
 
 		//ret_value = IMM_GetOneChannelValue(Channel, data, &ret_temp);
 		if (ret_value) {/* AUXADC is busy */
