@@ -3287,7 +3287,7 @@ static int smb1351_resume(struct device *dev)
 	chip->resume_completed = true;
 	if (chip->irq_waiting) {
 		mutex_unlock(&chip->irq_complete);
-		/* smb1351_chg_stat_handler(client->irq, chip); */
+		smb1351_chg_stat_handler(client->irq, chip);
 		enable_irq(client->irq);
 	} else {
 		mutex_unlock(&chip->irq_complete);
