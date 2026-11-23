@@ -183,7 +183,7 @@ static void mt6358_irq_sp_handler(struct mt6397_chip *chip,
 				irqd->reg_width * i + j;
 			virq = irq_find_mapping(chip->irq_domain, hwirq);
 #if DEBUG_PMIC_IRQ
-			dev_info(chip->dev,
+			dev_dbg(chip->dev,
 				"Reg[0x%x]=0x%x,name=%s,hwirq=%d,type=%d\n",
 				sta_reg, irq_status,
 				irqd->irq_name[hwirq], hwirq,
