@@ -611,7 +611,12 @@ int __weak do_tlb_conf_fault(unsigned long addr,
 			     unsigned int esr,
 			     struct pt_regs *regs)
 {
+#ifdef CONFIG_MACH_MT6771
+	flush_tlb_all();
+	return 0;
+#else
 	return 1; /* do_bad default */
+#endif
 }
 
 int (*do_tlb_conf_fault_cb)(unsigned long addr,

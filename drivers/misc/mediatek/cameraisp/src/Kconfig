@@ -9,7 +9,7 @@ config MTK_CAMERA_ISP_CAMERA_SUPPORT
 
 config MTK_CAMERA_ISP_SKIP_VIR_CQCNT_CHECK
 	bool "Don't wait for the virtual CQ count before signalling SOF"
-	depends on MACH_MT6765 || MACH_MT6768
+	depends on MACH_MT6765 || MACH_MT6768 || MACH_MT6771
 	depends on MTK_CAMERA_ISP
 	help
 	  Newer ISP drivers only wake up start-of-frame waiters once the
@@ -17,7 +17,7 @@ config MTK_CAMERA_ISP_SKIP_VIR_CQCNT_CHECK
 	  reports through ISP_SET_VIR_CQCNT. Older camera HALs never issue
 	  that ioctl, so they are never woken and get stuck.
 
-	  This change is only present on MT6765 / MT6768.
+	  This change is only present on MT6765 / MT6768 / MT6771.
 
 	  Say Y here if your camera HAL is affected by this change.
 

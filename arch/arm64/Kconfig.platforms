@@ -402,6 +402,14 @@ config MACH_MT6771
 	  Support for fpga_64_mt6771 related projects
 	  Support for mt6771 related projects
 
+config MACH_MT8183
+	bool "MediaTek MT8183"
+	select MACH_MT6771
+	help
+	  This enables support for MediaTek MT8183
+	  Support for aarch64 Architecture
+	  Support for mt8183 related projects
+
 config MACH_MT6779
 	bool "MediaTek MT6779"
 	select ARM64_USE_LSE_ATOMICS if ARM64 && JUMP_LABEL

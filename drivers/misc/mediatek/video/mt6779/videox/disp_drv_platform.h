@@ -14,7 +14,7 @@
 #endif
 /* #include <mach/mt_reg_base.h> */
 /* #include <mach/mt_irq.h> */
-/* #include "mt-plat/sync_write.h" */
+#include "mt-plat/sync_write.h"
 #include "disp_assert_layer.h"
 
 #include "ddp_hal.h"

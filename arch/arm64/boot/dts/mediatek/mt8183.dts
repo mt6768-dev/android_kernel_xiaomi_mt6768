@@ -1,0 +1,247 @@
+/* SPDX-License-Identifier: GPL-2.0 */
+/*
+ * Copyright (C) 2016 MediaTek Inc.
+ */
+
+#include "mt6771.dts"
+
+/ {
+	model = "mt8183";
+	compatible = "mediatek,mt8183", "mediatek,mt6771";
+};
+
+&chosen {
+	bootargs = "console=tty0 console=ttyS0,921600n1 \
+vmalloc=400M slub_debug=OFZPU swiotlb=noforce page_owner=on \
+cgroup.memory=nosocket,nokmem \
+androidboot.hardware=mt8183 \
+firmware_class.path=/vendor/firmware loop.max_part=7 clk_ignore_unused";
+};
+
+&ccifdriver {
+	status = "disabled";
+};
+
+&cldmadriver {
+	status = "disabled";
+};
+
+&mddriver {
+	status = "disabled";
+};
+
+&md_auxadc {
+	status = "disabled";
+};
+
+&cluster0_opp {
+	opp0 {
+		opp-hz = /bits/ 64 <793000000>;
+		opp-microvolt = <650000>;
+	};
+
+	opp1 {
+		opp-hz = /bits/ 64 <910000000>;
+		opp-microvolt = <687500>;
+	};
+
+	opp2 {
+		opp-hz = /bits/ 64 <1014000000>;
+		opp-microvolt = <718750>;
+	};
+
+	opp3 {
+		opp-hz = /bits/ 64 <1131000000>;
+		opp-microvolt = <756250>;
+	};
+
+	opp4 {
+		opp-hz = /bits/ 64 <1248000000>;
+		opp-microvolt = <800000>;
+	};
+
+	opp5 {
+		opp-hz = /bits/ 64 <1326000000>;
+		opp-microvolt = <818750>;
+	};
+
+	opp6 {
+		opp-hz = /bits/ 64 <1417000000>;
+		opp-microvolt = <850000>;
+	};
+
+	opp7 {
+		opp-hz = /bits/ 64 <1508000000>;
+		opp-microvolt = <868750>;
+	};
+
+	opp8 {
+		opp-hz = /bits/ 64 <1586000000>;
+		opp-microvolt = <893750>;
+	};
+
+	opp9 {
+		opp-hz = /bits/ 64 <1625000000>;
+		opp-microvolt = <906250>;
+	};
+
+	opp10 {
+		opp-hz = /bits/ 64 <1677000000>;
+		opp-microvolt = <931250>;
+	};
+
+	opp11 {
+		opp-hz = /bits/ 64 <1716000000>;
+		opp-microvolt = <943750>;
+	};
+
+	opp12 {
+		opp-hz = /bits/ 64 <1781000000>;
+		opp-microvolt = <975000>;
+	};
+
+	opp13 {
+		opp-hz = /bits/ 64 <1846000000>;
+		opp-microvolt = <1000000>;
+	};
+
+	opp14 {
+		opp-hz = /bits/ 64 <1924000000>;
+		opp-microvolt = <1025000>;
+	};
+
+	opp15 {
+		opp-hz = /bits/ 64 <1989000000>;
+		opp-microvolt = <1050000>;
+	};
+};
+
+&cluster1_opp {
+	opp0 {
+		opp-hz = /bits/ 64 <793000000>;
+		opp-microvolt = <700000>;
+	};
+
+	opp1 {
+		opp-hz = /bits/ 64 <910000000>;
+		opp-microvolt = <725000>;
+	};
+
+	opp2 {
+		opp-hz = /bits/ 64 <1014000000>;
+		opp-microvolt = <750000>;
+	};
+
+	opp3 {
+		opp-hz = /bits/ 64 <1131000000>;
+		opp-microvolt = <775000>;
+	};
+
+	opp4 {
+		opp-hz = /bits/ 64 <1248000000>;
+		opp-microvolt = <800000>;
+	};
+
+	opp5 {
+		opp-hz = /bits/ 64 <1326000000>;
+		opp-microvolt = <825000>;
+	};
+
+	opp6 {
+		opp-hz = /bits/ 64 <1417000000>;
+		opp-microvolt = <850000>;
+	};
+
+	opp7 {
+		opp-hz = /bits/ 64 <1508000000>;
+		opp-microvolt = <875000>;
+	};
+
+	opp8 {
+		opp-hz = /bits/ 64 <1586000000>;
+		opp-microvolt = <900000>;
+	};
+
+	opp9 {
+		opp-hz = /bits/ 64 <1625000000>;
+		opp-microvolt = <912500>;
+	};
+
+	opp10 {
+		opp-hz = /bits/ 64 <1677000000>;
+		opp-microvolt = <931250>;
+	};
+
+	opp11 {
+		opp-hz = /bits/ 64 <1716000000>;
+		opp-microvolt = <950000>;
+	};
+
+	opp12 {
+		opp-hz = /bits/ 64 <1781000000>;
+		opp-microvolt = <975000>;
+	};
+
+	opp13 {
+		opp-hz = /bits/ 64 <1846000000>;
+		opp-microvolt = <1000000>;
+	};
+
+	opp14 {
+		opp-hz = /bits/ 64 <1924000000>;
+		opp-microvolt = <1025000>;
+	};
+
+	opp15 {
+		opp-hz = /bits/ 64 <1989000000>;
+		opp-microvolt = <1050000>;
+	};
+};
+
+&cpu0 {
+	clock-frequency = <1989000000>;
+	dynamic-power-coefficient = <84>;
+	capacity-dmips-mhz = <741>;
+};
+
+&cpu1 {
+	clock-frequency = <1989000000>;
+	dynamic-power-coefficient = <84>;
+	capacity-dmips-mhz = <741>;
+};
+
+&cpu2 {
+	clock-frequency = <1989000000>;
+	dynamic-power-coefficient = <84>;
+	capacity-dmips-mhz = <741>;
+};
+
+&cpu3 {
+	clock-frequency = <1989000000>;
+	dynamic-power-coefficient = <84>;
+	capacity-dmips-mhz = <741>;
+};
+
+&cpu4 {
+	clock-frequency = <1989000000>;
+	dynamic-power-coefficient = <211>;
+	capacity-dmips-mhz = <1024>;
+};
+
+&cpu5 {
+	clock-frequency = <1989000000>;
+	dynamic-power-coefficient = <211>;
+	capacity-dmips-mhz = <1024>;
+};
+
+&cpu6 {
+	clock-frequency = <1989000000>;
+	dynamic-power-coefficient = <211>;
+	capacity-dmips-mhz = <1024>;
+};
+
+&cpu7 {
+	clock-frequency = <1989000000>;
+	dynamic-power-coefficient = <211>;
+	capacity-dmips-mhz = <1024>;
+};

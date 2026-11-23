@@ -7,7 +7,7 @@
 #include <linux/of_address.h>
 #include <linux/types.h>
 #include <linux/io.h>
-/* #include "mt-plat/sync_write.h" */
+#include "mt-plat/sync_write.h"
 
 #include "ddp_reg.h"
 #include "ddp_info.h"
@@ -21,9 +21,9 @@
 
 #define DRV_Reg32(addr) INREG32(addr)
 #define clk_readl(addr) DRV_Reg32(addr)
-#define clk_writel(addr, val) writel(val, addr)
-#define clk_setl(addr, val)  writel(clk_readl(addr) | (val), addr)
-#define clk_clrl(addr, val)  writel(clk_readl(addr) & ~(val), addr)
+#define clk_writel(addr, val) mt_reg_sync_writel(val, addr)
+#define clk_setl(addr, val)  mt_reg_sync_writel(clk_readl(addr) | (val), addr)
+#define clk_clrl(addr, val)  mt_reg_sync_writel(clk_readl(addr) & ~(val), addr)
 
 /**
  * display clk table

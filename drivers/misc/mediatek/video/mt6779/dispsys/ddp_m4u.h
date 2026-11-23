@@ -78,7 +78,7 @@ struct ion_client *disp_ion_create(const char *name);
 struct ion_handle *disp_ion_alloc(struct ion_client *client,
 				  unsigned int heap_id_mask, size_t align,
 				  unsigned int size);
-int *disp_aosp_ion_alloc(unsigned int heap_id_mask,
+int disp_aosp_ion_alloc(unsigned int heap_id_mask,
 				  unsigned int size);
 int disp_ion_get_mva(struct ion_client *client, struct ion_handle *handle,
 		     unsigned int *mva, int port);

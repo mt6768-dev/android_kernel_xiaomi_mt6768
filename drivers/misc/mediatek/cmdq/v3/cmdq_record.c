@@ -1308,18 +1308,6 @@ s32 cmdq_task_is_secure(struct cmdqRecStruct *handle)
 	return handle->secData.is_secure;
 }
 
-#ifdef CONFIG_MTK_IN_HOUSE_TEE_SUPPORT
-s32 cmdq_task_set_secure_mode(struct cmdqRecStruct *handle,
-	enum CMDQ_DISP_MODE mode)
-{
-	if (handle == NULL)
-		return -EFAULT;
-
-	handle->secData.secMode = mode;
-	return 0;
-}
-#endif
-
 s32 cmdq_task_secure_enable_dapc(struct cmdqRecStruct *handle,
 	const u64 engineFlag)
 {
@@ -3830,14 +3818,6 @@ s32 cmdqRecIsSecure(struct cmdqRecStruct *handle)
 {
 	return cmdq_task_is_secure(handle);
 }
-
-/* tablet use */
-#ifdef CONFIG_MTK_IN_HOUSE_TEE_SUPPORT
-s32 cmdqRecSetSecureMode(struct cmdqRecStruct *handle, enum CMDQ_DISP_MODE mode)
-{
-	return cmdq_task_set_secure_mode(handle, mode);
-}
-#endif
 
 s32 cmdqRecSecureEnableDAPC(struct cmdqRecStruct *handle, const u64 engineFlag)
 {

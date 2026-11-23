@@ -10,7 +10,7 @@
 #include "helio-dvfsrc-opp-mt8168.h"
 #else
 #ifdef CONFIG_MACH_MT8183
-#include "helio-dvfsrc-opp-mt8183.h"
+#include "helio-dvfsrc-opp-mt6771.h"
 #endif
 #endif
 #endif

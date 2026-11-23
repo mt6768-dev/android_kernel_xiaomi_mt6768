@@ -8,7 +8,7 @@
 #define _DDP_REG_H_
 
 #include <linux/io.h>
-/* #include "mt-plat/sync_write.h" */
+#include "mt-plat/sync_write.h"
 #include "display_recorder.h"
 #if defined(CONFIG_MTK_CMDQ)
 #include "cmdq_record.h"
@@ -170,7 +170,7 @@ extern cmdqBackupSlotHandle dispsys_slot;
 	} while (0)
 
 #define DISP_CPU_REG_SET(reg32, val)					\
-		writel(val, (unsigned long *)(reg32))
+		mt_reg_sync_writel(val, (unsigned long *)(reg32))
 
 /* after apply device tree va/pa is not mapped by a fixed offset */
 static inline unsigned long disp_addr_convert(unsigned long va)
@@ -189,7 +189,7 @@ static inline unsigned long disp_addr_convert(unsigned long va)
 #define DISP_REG_MASK(handle, reg32, val, mask)				\
 	do {								\
 		if (handle == NULL) {					\
-			writel((unsigned int)(INREG32(reg32)& \
+			mt_reg_sync_writel((unsigned int)(INREG32(reg32)& \
 					~(mask))|(val), (reg32));	\
 		} else {						\
 			cmdqRecWrite(handle,				\
@@ -201,7 +201,7 @@ static inline unsigned long disp_addr_convert(unsigned long va)
 #define DISP_REG_SET(handle, reg32, val)				\
 	do {								\
 		if (handle == NULL) {					\
-			writel(val, (unsigned long *)(reg32)); \
+			mt_reg_sync_writel(val, (unsigned long *)(reg32)); \
 		} else {						\
 			cmdqRecWrite(handle,				\
 				disp_addr_convert((unsigned long)(reg32)), \
@@ -219,7 +219,7 @@ static inline unsigned long disp_addr_convert(unsigned long va)
 			ltmp_regval  =					\
 				(ltmp_regval & ~REG_FLD_MASK(field)) |	\
 				(REG_FLD_VAL((field), (val)));		\
-			writel(ltmp_regval, (reg32));	\
+			mt_reg_sync_writel(ltmp_regval, (reg32));	\
 		} else {						\
 			cmdqRecWrite(handle, disp_addr_convert(reg32),	\
 					(val)<<REG_FLD_SHIFT(field),	\

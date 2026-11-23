@@ -570,7 +570,7 @@ static int mtkfb_pan_display_impl(struct fb_var_screeninfo *var,
 	info->var.yoffset = var->yoffset;
 	offset = var->yoffset * info->fix.line_length;
 	paStart = fb_mva + offset;
-	vaStart = (unsigned long)info->screen_base + offset;
+	vaStart = (char *)((unsigned long)info->screen_base + offset);
 	vaEnd = vaStart + info->var.yres * info->fix.line_length;
 
 	DISPCHECK("%s:%d, va=0x%lx, pa=0x%lx\n", __func__, __LINE__,
@@ -589,8 +589,8 @@ static int mtkfb_pan_display_impl(struct fb_var_screeninfo *var,
 	/* pan display use layer 0 */
 	input = &session_input->config[0];
 	input->layer_id = 0;
-	input->src_phy_addr = (unsigned long)paStart;
-	input->src_base_addr = (unsigned long)vaStart;
+	input->src_phy_addr = (void *)((unsigned long)paStart);
+	input->src_base_addr = (void *)((unsigned long)vaStart);
 	input->layer_id = primary_display_get_option("FB_LAYER");
 	input->layer_enable = 1;
 	input->src_offset_x = 0;
@@ -870,12 +870,12 @@ static int mtkfb_set_par(struct fb_info *fbi)
 
 	fb_layer.layer_id = primary_display_get_option("FB_LAYER");
 	fb_layer.layer_enable = 1;
-	fb_layer.src_base_addr = (unsigned long)fbdev->fb_va_base +
-					var->yoffset * fbi->fix.line_length;
+	fb_layer.src_base_addr = (void *)((unsigned long)fbdev->fb_va_base +
+					var->yoffset * fbi->fix.line_length);
 	DISPDBG("fb_pa=0x%08lx,var->yoffset=%u,fbi->fix.line_length=%u\n",
 		fb_mva, var->yoffset, fbi->fix.line_length);
-	fb_layer.src_phy_addr = fb_mva + var->yoffset *
-					 fbi->fix.line_length;
+	fb_layer.src_phy_addr = (void *)(fb_mva + var->yoffset *
+					 fbi->fix.line_length);
 	fb_layer.src_direct_link = 0;
 	fb_layer.src_offset_x = fb_layer.src_offset_y = 0;
 	fb_layer.src_pitch = ALIGN_TO(var->xres, MTK_FB_ALIGNMENT);
@@ -1529,15 +1529,15 @@ static int mtkfb_ioctl(struct fb_info *info, unsigned int cmd,
 
 		input = &session_input.config[0];
 		input->layer_id = 0;
-		input->src_phy_addr = (unsigned long)
+		input->src_phy_addr = (void *)(unsigned long)
 					fbdev->fb_pa_base;
 
 		input = &session_input.config[1];
 		input->layer_id = 3;
-		input->src_phy_addr =
+		input->src_phy_addr = (void *)(
 				(unsigned long)fbdev->fb_pa_base +
 				 (ALIGN_TO(MTK_FB_XRES, MTK_FB_ALIGNMENT) *
-				  ALIGN_TO(MTK_FB_YRES, MTK_FB_ALIGNMENT) * 4);
+				  ALIGN_TO(MTK_FB_YRES, MTK_FB_ALIGNMENT) * 4));
 
 		session_input.setter = SESSION_USER_PANDISP;
 		primary_display_config_input_multiple(&session_input);
@@ -1932,7 +1932,7 @@ static int mtkfb_fbinfo_init(struct fb_info *info)
 	ASSERT(fbdev->fb_va_base);
 	info->fbops = &mtkfb_ops;
 	info->flags = FBINFO_FLAG_DEFAULT;
-	info->screen_base = (unsigned long)(fbdev->fb_va_base);
+	info->screen_base = (char *)(fbdev->fb_va_base);
 	info->screen_size = fbdev->fb_size_in_byte;
 	info->pseudo_palette = fbdev->pseudo_palette;
 
@@ -1999,8 +1999,8 @@ static int init_framebuffer(struct fb_info *info)
 	int size;
 	struct fb_var_screeninfo *var = &info->var;
 
-	buffer = (unsigned long)info->screen_base + var->yoffset *
-		info->fix.line_length;
+	buffer = (void *)((unsigned long)info->screen_base + var->yoffset *
+		info->fix.line_length);
 	size = var->xres_virtual * var->yres * var->bits_per_pixel / 8;
 
 	memset_io(buffer, 0, size);
@@ -2069,7 +2069,7 @@ static void _mtkfb_draw_block(unsigned long addr, unsigned int x,
 
 	for (j = 0; j < h; j++) {
 		for (i = 0; i < w; i++)
-			writel(color, (start_addr + i * 4 +
+			mt_reg_sync_writel(color, (start_addr + i * 4 +
 						   j * MTK_FB_XRESV * 4));
 	}
 }

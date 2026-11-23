@@ -254,7 +254,7 @@ struct ion_handle *disp_ion_alloc(struct ion_client *client,
 	return disp_handle;
 }
 
-int *disp_aosp_ion_alloc(unsigned int heap_id_mask,
+int disp_aosp_ion_alloc(unsigned int heap_id_mask,
 				  unsigned int size)
 {
 	int fd = -1;

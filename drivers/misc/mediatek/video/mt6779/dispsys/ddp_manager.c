@@ -440,7 +440,7 @@ disp_path_handle dpmgr_create_path(enum DDP_SCENARIO_ENUM scenario,
 		if (m < 0 || m >= DISP_MODULE_NUM) {
 			DISP_LOG_E("%s: error module_id:%d\n",
 				   __func__, m);
-			return 1;
+			return NULL;
 		}
 		DDPDBG("%s\n", ddp_get_module_name(m));
 		c->module_usage_table[m]++;

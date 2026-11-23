@@ -8898,7 +8898,7 @@ int primary_display_capture_framebuffer_ovl(unsigned long pbuf,
 					 (unsigned long)frame_va);
 		goto out;
 	}
-	memcpy(pbuf, frame_va, buffer_size);
+	memcpy((void *)pbuf, frame_va, buffer_size);
 	ion_unmap_kernel(ion_display_client, ion_display_handle);
 
 out:

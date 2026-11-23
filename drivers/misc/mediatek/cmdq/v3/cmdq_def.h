@@ -473,10 +473,6 @@ struct cmdqSecDataStruct {
 
 	/*iommu_sec_id*/
 	int32_t sec_id;
-#ifdef CONFIG_MTK_IN_HOUSE_TEE_SUPPORT
-	/* tablet use */
-	uint32_t secMode;
-#endif
 };
 
 struct cmdq_v3_replace_struct {

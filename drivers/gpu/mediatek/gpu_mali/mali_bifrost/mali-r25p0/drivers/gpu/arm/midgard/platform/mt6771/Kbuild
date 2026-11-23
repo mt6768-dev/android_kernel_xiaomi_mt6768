@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# (C) COPYRIGHT 2012-2013, 2016-2017 ARM Limited. All rights reserved.
+
+include $(src)/Kbuild-mtk-custom-env
+
+mali_kbase-y += \
+	$(MALI_PLATFORM_DIR)/mali_kbase_config_mt6771.o \
+	$(MALI_PLATFORM_DIR)/mali_kbase_cpu_mt6771.o \
+#	mali_kbase_platform_fake.o
+
+ccflags-y += \
+	-I$(srctree)/drivers/misc/mediatek/base/power/include

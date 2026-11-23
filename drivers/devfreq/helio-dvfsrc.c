@@ -301,9 +301,9 @@ static int commit_data(struct helio_dvfsrc *dvfsrc, int type, int data)
 		ret = wait_for_completion
 			(is_dvfsrc_in_progress(dvfsrc) == 0, DVFSRC_TIMEOUT);
 		if (ret) {
-			pr_info("[%s] wait no idle, class: %d, data: 0x%x",
+			pr_debug("[%s] wait no idle, class: %d, data: 0x%x",
 				__func__, type, data);
-			pr_info("rc_level: 0x%x (last: %d -> %d)\n",
+			pr_debug("rc_level: 0x%x (last: %d -> %d)\n",
 				dvfsrc_read(dvfsrc, DVFSRC_LEVEL),
 				last_cnt, dvfsrc_read(dvfsrc, DVFSRC_LAST));
 
