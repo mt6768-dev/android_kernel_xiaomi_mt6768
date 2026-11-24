@@ -451,6 +451,14 @@ static int axiDmaSetup(struct platform_device *pdev,
 	if (ret)
 		goto exit;
 	ret = of_reserved_mem_device_init(&pdev->dev);
+	/*
+	 * of_platform_device_create_pdata() already assigns memory-region 0
+	 * when the platform device is created, so the region may already be
+	 * attached to this device. -EBUSY only means dev->dma_mem is set, so
+	 * keep using the pool that is already there.
+	 */
+	if (ret == -EBUSY)
+		ret = 0;
 	if (ret) {
 		DBGLOG(INIT, ERROR, "of_reserved_mem_device_init failed(%d).\n",
 				ret);
